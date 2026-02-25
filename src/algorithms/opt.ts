@@ -4,6 +4,7 @@ import { emptyFrame, cloneFrames } from './utils';
 export function runOPT(sequence: number[], frameCount: number): Snapshot[] {
   const snapshots: Snapshot[] = [];
   let frames = Array.from({ length: frameCount }, (_, i) => emptyFrame(i));
+  let arrivalCounter = 0;
   let faults = 0;
   let hits = 0;
 
@@ -30,7 +31,9 @@ export function runOPT(sequence: number[], frameCount: number): Snapshot[] {
       if (emptySlot !== -1) {
         replaceIdx = emptySlot;
       } else {
-        // Reemplazar la página cuyo próximo uso sea más lejano (o nunca usada)
+        // Reemplazar la página cuyo próximo uso sea más lejano (o nunca usada).
+        // Desempate: si varias páginas tienen el mismo nextUse (incluido Infinity),
+        // se elige la que llegó primero a memoria — criterio FIFO.
         let farthest = -1;
         replaceIdx = 0;
 
@@ -38,9 +41,15 @@ export function runOPT(sequence: number[], frameCount: number): Snapshot[] {
           const p = newFrames[i].page as number;
           const nextUse = sequence.indexOf(p, step + 1);
           const dist = nextUse === -1 ? Infinity : nextUse;
+
           if (dist > farthest) {
             farthest = dist;
             replaceIdx = i;
+          } else if (dist === farthest) {
+            // Empate: elegir el que llegó antes (FIFO)
+            if (newFrames[i].arrivalOrder < newFrames[replaceIdx].arrivalOrder) {
+              replaceIdx = i;
+            }
           }
         }
       }
@@ -48,6 +57,7 @@ export function runOPT(sequence: number[], frameCount: number): Snapshot[] {
       newFrames[replaceIdx].page = page;
       newFrames[replaceIdx].isNew = true;
       newFrames[replaceIdx].isReplaced = emptySlot === -1;
+      newFrames[replaceIdx].arrivalOrder = ++arrivalCounter;
 
       snapshots.push({
         step, page, frames: newFrames,
