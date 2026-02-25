@@ -13,15 +13,21 @@ const initialState: SimulatorState = {
   isPlaying: false,
   playSpeed: 1000,
   isConfigured: false,
+  dirtyOverrides: {},
 };
 
 // ─── Función que ejecuta el algoritmo elegido ──────────────────────────────────
 
-function computeSnapshots(algorithm: AlgorithmId, sequence: number[], frameCount: number) {
+function computeSnapshots(
+  algorithm: AlgorithmId,
+  sequence: number[],
+  frameCount: number,
+  dirtyOverrides: Record<number, boolean>,
+) {
   switch (algorithm) {
     case 'FIFO':  return runFIFO(sequence, frameCount);
     case 'LRU':   return runLRU(sequence, frameCount);
-    case 'NRU':   return runNRU(sequence, frameCount);
+    case 'NRU':   return runNRU(sequence, frameCount, dirtyOverrides);
     case 'OPT':   return runOPT(sequence, frameCount);
     case 'CLOCK': return runClock(sequence, frameCount);
     case 'LFU':   return runLFU(sequence, frameCount);
@@ -37,14 +43,32 @@ function simulatorReducer(state: SimulatorState, action: SimulatorAction): Simul
       return { ...state, algorithm: action.payload, isConfigured: false, snapshots: [], currentStep: 0, isPlaying: false };
 
     case 'SET_SEQUENCE':
-      return { ...state, pageSequence: action.payload, isConfigured: false, snapshots: [], currentStep: 0, isPlaying: false };
+      return { ...state, pageSequence: action.payload, isConfigured: false, snapshots: [], currentStep: 0, isPlaying: false, dirtyOverrides: {} };
 
     case 'SET_FRAME_COUNT':
       return { ...state, frameCount: action.payload, isConfigured: false, snapshots: [], currentStep: 0, isPlaying: false };
 
     case 'RUN_SIMULATION': {
-      const snapshots = computeSnapshots(state.algorithm, state.pageSequence, state.frameCount);
+      const snapshots = computeSnapshots(state.algorithm, state.pageSequence, state.frameCount, state.dirtyOverrides);
       return { ...state, snapshots, currentStep: 0, isConfigured: true, isPlaying: false };
+    }
+
+    case 'TOGGLE_DIRTY': {
+      // Alterna el override de bit M para ese paso y re-ejecuta la simulación si ya está configurada
+      const step = action.payload;
+      const current = state.dirtyOverrides[step];
+      const newOverrides = { ...state.dirtyOverrides };
+      if (current === undefined) {
+        // Sin override → tomar el valor actual del snapshot y negarlo
+        const currentM = state.snapshots[step]?.frames.find(f => f.page === state.snapshots[step].page)?.bitM ?? false;
+        newOverrides[step] = !currentM;
+      } else {
+        // Tiene override → togglear
+        newOverrides[step] = !current;
+      }
+      // Re-calcular simulación con el nuevo override
+      const snapshots = computeSnapshots(state.algorithm, state.pageSequence, state.frameCount, newOverrides);
+      return { ...state, dirtyOverrides: newOverrides, snapshots, isConfigured: true };
     }
 
     case 'STEP_FORWARD':
@@ -143,5 +167,6 @@ export function useSimulatorActions() {
     togglePlay: useCallback(() => dispatch({ type: 'TOGGLE_PLAY' }), [dispatch]),
     setSpeed: useCallback((ms: number) => dispatch({ type: 'SET_SPEED', payload: ms }), [dispatch]),
     reset: useCallback(() => dispatch({ type: 'RESET' }), [dispatch]),
+    toggleDirty: useCallback((step: number) => dispatch({ type: 'TOGGLE_DIRTY', payload: step }), [dispatch]),
   };
 }

@@ -13,15 +13,24 @@ function nruClass(bitR: boolean, bitM: boolean): number {
   return 3;
 }
 
-export function runNRU(sequence: number[], frameCount: number): Snapshot[] {
+export function runNRU(
+  sequence: number[],
+  frameCount: number,
+  dirtyOverrides: Record<number, boolean> = {},
+): Snapshot[] {
   const snapshots: Snapshot[] = [];
   let frames = Array.from({ length: frameCount }, (_, i) => emptyFrame(i));
   let tickCount = 0;
   let faults = 0;
   let hits = 0;
 
-  // Asignar bit M aleatoriamente a páginas (simulado con seed determinístico por página)
+  // Bit M base por página: seed determinístico, puede ser sobreescrito por override de paso
   const dirtySeed = (page: number) => ((page * 1103515245 + 12345) & 0x7fffffff) % 3 === 0;
+
+  // Resuelve el bit M para un paso concreto:
+  // Si hay override para ese step, lo usa; si no, usa la seed de la página
+  const resolveM = (step: number, page: number): boolean =>
+    step in dirtyOverrides ? dirtyOverrides[step] : dirtySeed(page);
 
   for (let step = 0; step < sequence.length; step++) {
     const page = sequence[step];
@@ -39,8 +48,8 @@ export function runNRU(sequence: number[], frameCount: number): Snapshot[] {
       hits++;
       newFrames[hitIndex].isHit = true;
       newFrames[hitIndex].bitR = true;
-      // Si la página es "sucia" según la seed, poner M=1
-      if (dirtySeed(page)) newFrames[hitIndex].bitM = true;
+      // Aplicar M según override o seed
+      if (resolveM(step, page)) newFrames[hitIndex].bitM = true;
 
       const vars = buildVars(newFrames, null, tickCount);
       snapshots.push({
@@ -65,7 +74,6 @@ export function runNRU(sequence: number[], frameCount: number): Snapshot[] {
             .filter(x => x.cls === cls);
           if (candidates.length > 0) {
             selectedClass = cls;
-            // Elegir aleatoriamente entre candidatos (primer candidato = determinístico)
             replaceIdx = candidates[0].i;
             break;
           }
@@ -77,7 +85,7 @@ export function runNRU(sequence: number[], frameCount: number): Snapshot[] {
       newFrames[replaceIdx].isNew = true;
       newFrames[replaceIdx].isReplaced = emptySlot === -1;
       newFrames[replaceIdx].bitR = true;
-      newFrames[replaceIdx].bitM = dirtySeed(page);
+      newFrames[replaceIdx].bitM = resolveM(step, page);
 
       const vars = buildVars(newFrames, selectedClass, tickCount);
       snapshots.push({

@@ -37,7 +37,7 @@ const ALGO_SUBTEXT: Record<string, string> = {
 
 export function FrameTable() {
   const { state } = useSimulator();
-  const { goToStep } = useSimulatorActions();
+  const { goToStep, toggleDirty } = useSimulatorActions();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeColRef = useRef<HTMLTableCellElement>(null);
 
@@ -134,13 +134,21 @@ export function FrameTable() {
                 {snapshots.map((snap, col) => {
                   const isCurrent = col === currentStep;
                   const isPast    = col < currentStep;
+
+                  // bit M de esta referencia (el frame que fue tocado en este paso)
+                  const nruMValue = algorithm === 'NRU'
+                    ? (snap.frames.find(f => f.page === snap.page)?.bitM ?? false)
+                    : false;
+                  // ¿tiene override manual?
+                  const hasOverride = col in state.dirtyOverrides;
+
                   return (
                     <th
                       key={col}
                       ref={isCurrent ? activeColRef : undefined}
                       onClick={() => goToStep(col)}
-                      className="w-12 min-w-12 pb-3 align-bottom text-center cursor-pointer
-                                 select-none group"
+                      className={`pb-3 align-bottom text-center cursor-pointer select-none group
+                        ${algorithm === 'NRU' ? 'w-16 min-w-16' : 'w-12 min-w-12'}`}
                     >
                       {/* Número del paso */}
                       <div className={`text-[10px] font-semibold mb-1.5 transition-colors
@@ -161,6 +169,24 @@ export function FrameTable() {
                       `}>
                         {snap.page}
                       </div>
+                      {/* Badge M clickeable — solo NRU */}
+                      {algorithm === 'NRU' && (
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleDirty(col); }}
+                          title={`Clic para cambiar M=${nruMValue ? 1 : 0} en paso ${col + 1}`}
+                          className={`
+                            mt-1 mx-auto flex items-center justify-center
+                            text-[9px] font-black font-mono px-1.5 py-0.5 rounded border
+                            cursor-pointer transition-colors duration-200
+                            ${nruMValue
+                              ? 'bg-orange-500/20 border-orange-500/50 text-orange-300 hover:bg-orange-500/35'
+                              : 'bg-slate-700/60 border-slate-600/40 text-slate-500 hover:border-slate-500 hover:text-slate-400'}
+                            ${hasOverride ? 'ring-1 ring-white/20' : ''}
+                          `}
+                        >
+                          M={nruMValue ? 1 : 0}
+                        </button>
+                      )}
                     </th>
                   );
                 })}

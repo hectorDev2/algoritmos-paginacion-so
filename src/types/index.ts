@@ -89,6 +89,8 @@ export interface SimulatorState {
   isPlaying: boolean;
   playSpeed: number;          // ms entre pasos
   isConfigured: boolean;      // si ya se corrió la simulación
+  // NRU: override manual del bit M por paso (step → true/false)
+  dirtyOverrides: Record<number, boolean>;
 }
 
 export type SimulatorAction =
@@ -103,4 +105,5 @@ export type SimulatorAction =
   | { type: 'GO_TO_STEP'; payload: number }
   | { type: 'TOGGLE_PLAY' }
   | { type: 'SET_SPEED'; payload: number }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'TOGGLE_DIRTY'; payload: number }; // payload = step index
