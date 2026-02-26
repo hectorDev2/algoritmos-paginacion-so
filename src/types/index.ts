@@ -1,6 +1,6 @@
 // ─── Tipos base ───────────────────────────────────────────────────────────────
 
-export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU';
+export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU' | 'MFU';
 
 export interface FrameState {
   frameIndex: number;       // índice del frame (0..n-1)
@@ -41,7 +41,8 @@ export type AlgorithmVariables =
   | NRUVariables
   | OPTVariables
   | CLOCKVariables
-  | LFUVariables;
+  | LFUVariables
+  | MFUVariables;
 
 export interface FIFOVariables {
   type: 'FIFO';
@@ -75,6 +76,11 @@ export interface CLOCKVariables {
 
 export interface LFUVariables {
   type: 'LFU';
+  frequencies: { page: number | null; freq: number }[];
+}
+
+export interface MFUVariables {
+  type: 'MFU';
   frequencies: { page: number | null; freq: number }[];
 }
 

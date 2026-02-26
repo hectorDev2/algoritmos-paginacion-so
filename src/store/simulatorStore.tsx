@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useCallback, useRef, useEffect } from 'react';
 import type { SimulatorState, SimulatorAction, AlgorithmId } from '../types';
-import { runFIFO, runLRU, runNRU, runOPT, runClock, runLFU } from '../algorithms';
+import { runFIFO, runLRU, runNRU, runOPT, runClock, runLFU, runMFU } from '../algorithms';
 
 // ─── Estado inicial ────────────────────────────────────────────────────────────
 
@@ -31,6 +31,7 @@ function computeSnapshots(
     case 'OPT':   return runOPT(sequence, frameCount);
     case 'CLOCK': return runClock(sequence, frameCount);
     case 'LFU':   return runLFU(sequence, frameCount);
+    case 'MFU':   return runMFU(sequence, frameCount);
     default:      return runFIFO(sequence, frameCount);
   }
 }

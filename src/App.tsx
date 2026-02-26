@@ -30,6 +30,7 @@ function AppContent() {
               ['OPT',   'bg-green-500/20 text-green-300 ring-green-500/30'],
               ['Clock', 'bg-orange-500/20 text-orange-300 ring-orange-500/30'],
               ['LFU',   'bg-pink-500/20 text-pink-300 ring-pink-500/30'],
+              ['MFU',   'bg-teal-500/20 text-teal-300 ring-teal-500/30'],
             ].map(([label, cls]) => (
               <span key={label} className={`text-[11px] font-bold px-2.5 py-1 rounded-full ring-1 ${cls}`}>
                 {label}

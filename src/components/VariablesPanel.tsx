@@ -1,7 +1,7 @@
 import { useSimulator } from '../store/simulatorStore';
 import type {
   AlgorithmVariables, FIFOVariables, LRUVariables,
-  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables,
+  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables, MFUVariables,
 } from '../types';
 
 export function VariablesPanel() {
@@ -42,6 +42,7 @@ function VariablesContent({ vars }: { vars: AlgorithmVariables }) {
     case 'OPT':   return <OPTVars   vars={vars} />;
     case 'CLOCK': return <CLOCKVars vars={vars} />;
     case 'LFU':   return <LFUVars   vars={vars} />;
+    case 'MFU':   return <MFUVars   vars={vars} />;
   }
 }
 
@@ -260,6 +261,50 @@ function LFUVars({ vars }: { vars: LFUVariables }) {
       </div>
       <Explainer>
         LFU reemplaza el frame con menor frecuencia de acceso. En caso de empate se usa LRU como desempate.
+      </Explainer>
+    </div>
+  );
+}
+
+function MFUVars({ vars }: { vars: MFUVariables }) {
+  const maxFreq = Math.max(...vars.frequencies.filter(f => f.page !== null).map(f => f.freq), 1);
+  const victim = vars.frequencies
+    .filter(f => f.page !== null)
+    .reduce<{ freq: number } | null>((acc, f) => {
+      if (!acc || f.freq > acc.freq) return f;
+      return acc;
+    }, null);
+  const victimFreq = victim?.freq ?? -1;
+
+  return (
+    <div className="space-y-4">
+      <SectionLabel>Frecuencia de uso por frame</SectionLabel>
+      <div className="space-y-2">
+        {vars.frequencies.map((f, i) => {
+          const isVictim = f.page !== null && f.freq === victimFreq;
+          return (
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="text-[11px] text-slate-500 w-16 shrink-0">Frame {i}</span>
+              <span className="text-xs font-bold font-mono text-teal-300 w-14 shrink-0">
+                {f.page !== null ? `Pág. ${f.page}` : '—'}
+              </span>
+              <div className="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-teal-600 h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-1.5"
+                  style={{ width: f.page !== null ? `${(f.freq / maxFreq) * 100}%` : '0%', minWidth: f.page !== null && f.freq > 0 ? '20px' : '0' }}
+                >
+                  {f.page !== null && f.freq > 0 && (
+                    <span className="text-[10px] text-white font-bold">{f.freq}</span>
+                  )}
+                </div>
+              </div>
+              {isVictim && <Badge color="red">Víctima</Badge>}
+            </div>
+          );
+        })}
+      </div>
+      <Explainer>
+        MFU reemplaza el frame con mayor frecuencia de acceso (más frecuentemente usado). En caso de empate se usa LRU como desempate.
       </Explainer>
     </div>
   );

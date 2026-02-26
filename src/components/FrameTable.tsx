@@ -9,6 +9,7 @@ const ALGO_ACCENT_BG: Record<string, string> = {
   OPT:   'bg-green-500',
   CLOCK: 'bg-orange-500',
   LFU:   'bg-pink-500',
+  MFU:   'bg-teal-500',
 };
 const ALGO_BORDER: Record<string, string> = {
   FIFO:  'border-blue-500',
@@ -17,6 +18,7 @@ const ALGO_BORDER: Record<string, string> = {
   OPT:   'border-green-500',
   CLOCK: 'border-orange-500',
   LFU:   'border-pink-500',
+  MFU:   'border-teal-500',
 };
 const ALGO_TEXT: Record<string, string> = {
   FIFO:  'text-blue-400',
@@ -25,6 +27,7 @@ const ALGO_TEXT: Record<string, string> = {
   OPT:   'text-green-400',
   CLOCK: 'text-orange-400',
   LFU:   'text-pink-400',
+  MFU:   'text-teal-400',
 };
 const ALGO_SUBTEXT: Record<string, string> = {
   FIFO:  'text-blue-400/70',
@@ -33,6 +36,7 @@ const ALGO_SUBTEXT: Record<string, string> = {
   OPT:   'text-green-400/70',
   CLOCK: 'text-orange-400/70',
   LFU:   'text-pink-400/70',
+  MFU:   'text-teal-400/70',
 };
 
 export function FrameTable() {
@@ -235,7 +239,7 @@ export function FrameTable() {
                     if (!isEmpty && algorithm !== 'NRU') {
                       if (algorithm === 'CLOCK')
                         subInfo = <span className={`text-[9px] font-mono ${frame.clockBit ? accentSub : 'text-slate-600'}`}>{frame.clockBit ? '●' : '○'}</span>;
-                      else if (algorithm === 'LFU')
+                      else if (algorithm === 'LFU' || algorithm === 'MFU')
                         subInfo = <span className={`text-[9px] font-mono ${accentSub}`}>f{frame.frequency}</span>;
                       else if (algorithm === 'LRU')
                         subInfo = <span className={`text-[9px] font-mono ${accentSub}`}>t{frame.lastUsed}</span>;
