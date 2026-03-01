@@ -16,6 +16,7 @@ Permite visualizar en tiempo real cómo cada algoritmo decide qué página desal
 | **OPT** | Verde | Óptimo de Belady — reemplaza la de uso más lejano en el futuro |
 | **Clock** | Naranja | Segunda oportunidad — variante eficiente de FIFO con bit de referencia |
 | **LFU** | Rosa | Reemplaza la página con menor frecuencia de acceso |
+| **MFU** | Teal | Reemplaza la página con mayor frecuencia de acceso |
 
 ---
 
@@ -26,8 +27,13 @@ Permite visualizar en tiempo real cómo cada algoritmo decide qué página desal
 - **Variables internas por algoritmo** — visualización en tiempo real de la cola FIFO, timestamps LRU, bits R/M en NRU, próximo uso en OPT, puntero y bits del Clock, frecuencias LFU
 - **Bit M editable en NRU** — clic en el badge `M=0/M=1` de cada columna para forzar el valor del bit de modificación; la simulación se recalcula al instante
 - **Estadísticas reales de SO** — tasa de fallos, tasa de hits, fallos mínimos inevitables, fallos OPT como referencia, y eficiencia relativa al óptimo (`optFaults / tusFallos × 100%`)
-- **Sub-información en celdas** — cada celda muestra datos internos del algoritmo activo (orden de llegada FIFO, timestamp LRU, bits R/M en NRU, bit de clock, frecuencia LFU)
+- **Sub-información en celdas** — cada celda muestra datos internos del algoritmo activo (orden de llegada FIFO, timestamp LRU, bits R/M en NRU, bit de clock, frecuencia LFU/MFU)
 - **Desempate OPT con FIFO** — cuando varias páginas tienen el mismo próximo uso (o nunca se usan), se reemplaza la que llegó primero a memoria
+- **Panel de métricas detallado** — 4 secciones al finalizar la simulación:
+  - *Recursos utilizados*: frames asignados, páginas únicas, pico de ocupación, evictions, memoria simulada
+  - *Tiempo de ejecución*: ms reales de cómputo, rendimiento (refs/ms), fallos y hits con porcentaje
+  - *Llamadas al sistema*: syscalls y lecturas de disco generadas por los page faults
+  - *Interrupciones*: page fault interrupts + extra por algoritmo (clock hand steps en CLOCK, ticks de reloj en NRU)
 
 ---
 
@@ -46,7 +52,7 @@ Todos los snapshots se pre-calculan al ejecutar la simulación. La navegación s
 
 ```
 src/
-├── types/index.ts           # Tipos: FrameState, Snapshot, AlgorithmVariables, SimulatorState
+├── types/index.ts           # Tipos: FrameState, Snapshot, AlgorithmVariables, SimulatorState, SimulationMetrics
 ├── algorithms/
 │   ├── fifo.ts
 │   ├── lru.ts
@@ -54,14 +60,16 @@ src/
 │   ├── opt.ts               # Desempate por FIFO (arrivalOrder)
 │   ├── clock.ts
 │   ├── lfu.ts               # Desempate por LRU
+│   ├── mfu.ts               # Desempate por LRU (inverso a LFU)
 │   └── utils.ts
-├── store/simulatorStore.tsx # useReducer + Context + autoplay + TOGGLE_DIRTY
+├── store/simulatorStore.tsx # useReducer + Context + autoplay + TOGGLE_DIRTY + computeMetrics
 └── components/
     ├── ConfigPanel.tsx      # Selector de algoritmo, secuencia, nº de marcos, ejecutar/reiniciar
     ├── FrameTable.tsx       # Tabla principal con badges M clickeables en NRU
     ├── StepControls.tsx     # Navegación, scrubber, velocidad
     ├── VariablesPanel.tsx   # Variables internas por algoritmo
-    └── StatsPanel.tsx       # Estadísticas con eficiencia vs OPT
+    ├── StatsPanel.tsx       # Estadísticas con eficiencia vs OPT
+    └── MetricsPanel.tsx     # Métricas: recursos, tiempo, syscalls e interrupciones
 ```
 
 ---
