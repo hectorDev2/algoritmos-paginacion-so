@@ -290,3 +290,26 @@ El bit de modificación se inicializa con una función hash determinista sobre e
 Eficiencia = (Fallos OPT / Fallos algoritmo) × 100%
 ```
 Si el algoritmo seleccionado es OPT, la eficiencia es siempre 100%. Si hay 0 fallos en ambos, también se reporta 100%.
+
+---
+
+## Informe técnico
+
+El directorio `informe/` contiene un informe académico completo en LaTeX (`informe.tex`) elaborado para la asignatura de Sistemas Operativos — UNSAAC.
+
+**Contenido del informe:**
+- Marco teórico: memoria virtual, paginación y fallos de página
+- Explicación detallada de los 7 algoritmos con ejemplos trazados paso a paso
+- Descripción de la arquitectura e implementación del simulador
+- Capturas de pantalla anotadas de cada funcionalidad
+- Análisis comparativo de resultados con la secuencia clásica de Bélady
+- Panel de métricas: recursos, tiempo, syscalls e interrupciones
+- Conclusiones y referencias bibliográficas
+
+**Para compilar el PDF:**
+```bash
+cd informe
+# Coloca logo.png de la UNSAAC en esta carpeta
+pdflatex informe.tex
+pdflatex informe.tex   # segunda pasada para índice y referencias cruzadas
+```
