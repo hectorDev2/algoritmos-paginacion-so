@@ -84,6 +84,26 @@ export interface MFUVariables {
   frequencies: { page: number | null; freq: number }[];
 }
 
+// ─── Métricas de simulación ───────────────────────────────────────────────────
+
+export interface SimulationMetrics {
+  executionTimeMs: number;       // tiempo real de cómputo en ms
+  referencesPerMs: number;       // referencias procesadas por ms
+  framesAllocated: number;       // número de frames configurados
+  uniquePagesTotal: number;      // páginas únicas en la secuencia
+  peakFramesOccupied: number;    // máximo de frames ocupados a la vez
+  pagesEvicted: number;          // reemplazos reales (frames llenos al fallar)
+  memorySimulatedKB: number;     // frameCount × 4 KB
+  totalSyscalls: number;         // = totalFaults (1 trap/fallo)
+  diskReads: number;             // = totalFaults (1 lectura de disco/fallo)
+  pageFaultInterrupts: number;   // = totalFaults
+  extraInterrupts: number;       // CLOCK: pasos buscando víctima; NRU: tickCount
+  totalInterrupts: number;       // pageFaultInterrupts + extraInterrupts
+  totalFaults: number;
+  totalHits: number;
+  totalSteps: number;
+}
+
 // ─── Estado global del simulador ──────────────────────────────────────────────
 
 export interface SimulatorState {
@@ -97,6 +117,7 @@ export interface SimulatorState {
   isConfigured: boolean;      // si ya se corrió la simulación
   // NRU: override manual del bit M por paso (step → true/false)
   dirtyOverrides: Record<number, boolean>;
+  metrics: SimulationMetrics | null;
 }
 
 export type SimulatorAction =

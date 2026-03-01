@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, useRef, useEffect } from 'react';
-import type { SimulatorState, SimulatorAction, AlgorithmId } from '../types';
+import type { SimulatorState, SimulatorAction, AlgorithmId, Snapshot, SimulationMetrics } from '../types';
 import { runFIFO, runLRU, runNRU, runOPT, runClock, runLFU, runMFU } from '../algorithms';
 
 // ─── Estado inicial ────────────────────────────────────────────────────────────
@@ -14,6 +14,7 @@ const initialState: SimulatorState = {
   playSpeed: 1000,
   isConfigured: false,
   dirtyOverrides: {},
+  metrics: null,
 };
 
 // ─── Función que ejecuta el algoritmo elegido ──────────────────────────────────
@@ -36,6 +37,70 @@ function computeSnapshots(
   }
 }
 
+// ─── Cálculo de métricas ───────────────────────────────────────────────────────
+
+function computeMetrics(
+  snapshots: Snapshot[],
+  algorithm: AlgorithmId,
+  frameCount: number,
+  executionTimeMs: number,
+): SimulationMetrics {
+  const totalSteps = snapshots.length;
+  const totalFaults = snapshots.filter(s => s.isFault).length;
+  const totalHits = totalSteps - totalFaults;
+  const uniquePagesTotal = new Set(snapshots.map(s => s.page)).size;
+
+  // Páginas realmente reemplazadas (fallo con frame lleno = isReplaced)
+  const pagesEvicted = snapshots.filter(s =>
+    s.isFault && s.replacedFrameIndex !== null && s.frames[s.replacedFrameIndex]?.isReplaced
+  ).length;
+
+  // Pico de frames ocupados
+  const peakFramesOccupied = snapshots.reduce((max, s) => {
+    const occupied = s.frames.filter(f => f.page !== null).length;
+    return Math.max(max, occupied);
+  }, 0);
+
+  // Interrupciones extra según algoritmo
+  let extraInterrupts = 0;
+  if (algorithm === 'CLOCK') {
+    extraInterrupts = snapshots
+      .filter(s => s.isFault)
+      .reduce((sum, s) => {
+        const vars = s.variables as { type: 'CLOCK'; stepsToReplace: number };
+        return sum + (vars.stepsToReplace ?? 0);
+      }, 0);
+  } else if (algorithm === 'NRU') {
+    const lastSnap = snapshots[snapshots.length - 1];
+    if (lastSnap) {
+      const vars = lastSnap.variables as { type: 'NRU'; tickCount: number };
+      extraInterrupts = vars.tickCount ?? 0;
+    }
+  }
+
+  const pageFaultInterrupts = totalFaults;
+  const totalInterrupts = pageFaultInterrupts + extraInterrupts;
+  const referencesPerMs = executionTimeMs > 0 ? totalSteps / executionTimeMs : 0;
+
+  return {
+    executionTimeMs,
+    referencesPerMs,
+    framesAllocated: frameCount,
+    uniquePagesTotal,
+    peakFramesOccupied,
+    pagesEvicted,
+    memorySimulatedKB: frameCount * 4,
+    totalSyscalls: totalFaults,
+    diskReads: totalFaults,
+    pageFaultInterrupts,
+    extraInterrupts,
+    totalInterrupts,
+    totalFaults,
+    totalHits,
+    totalSteps,
+  };
+}
+
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
 function simulatorReducer(state: SimulatorState, action: SimulatorAction): SimulatorState {
@@ -50,8 +115,11 @@ function simulatorReducer(state: SimulatorState, action: SimulatorAction): Simul
       return { ...state, frameCount: action.payload, isConfigured: false, snapshots: [], currentStep: 0, isPlaying: false };
 
     case 'RUN_SIMULATION': {
+      const t0 = performance.now();
       const snapshots = computeSnapshots(state.algorithm, state.pageSequence, state.frameCount, state.dirtyOverrides);
-      return { ...state, snapshots, currentStep: 0, isConfigured: true, isPlaying: false };
+      const executionTimeMs = performance.now() - t0;
+      const metrics = computeMetrics(snapshots, state.algorithm, state.frameCount, executionTimeMs);
+      return { ...state, snapshots, currentStep: 0, isConfigured: true, isPlaying: false, metrics };
     }
 
     case 'TOGGLE_DIRTY': {
@@ -68,8 +136,11 @@ function simulatorReducer(state: SimulatorState, action: SimulatorAction): Simul
         newOverrides[step] = !current;
       }
       // Re-calcular simulación con el nuevo override
+      const t0 = performance.now();
       const snapshots = computeSnapshots(state.algorithm, state.pageSequence, state.frameCount, newOverrides);
-      return { ...state, dirtyOverrides: newOverrides, snapshots, isConfigured: true };
+      const executionTimeMs = performance.now() - t0;
+      const metrics = computeMetrics(snapshots, state.algorithm, state.frameCount, executionTimeMs);
+      return { ...state, dirtyOverrides: newOverrides, snapshots, isConfigured: true, metrics };
     }
 
     case 'STEP_FORWARD':

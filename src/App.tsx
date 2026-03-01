@@ -4,6 +4,7 @@ import { FrameTable } from './components/FrameTable';
 import { StepControls } from './components/StepControls';
 import { VariablesPanel } from './components/VariablesPanel';
 import { StatsPanel } from './components/StatsPanel';
+import { MetricsPanel } from './components/MetricsPanel';
 
 function AppContent() {
   return (
@@ -55,6 +56,7 @@ function AppContent() {
           <FrameTable />
           <StepControls />
           <VariablesPanel />
+          <MetricsPanel />
         </section>
       </main>
 
