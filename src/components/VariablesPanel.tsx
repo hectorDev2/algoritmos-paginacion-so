@@ -362,9 +362,8 @@ function AgingVars({ vars }: { vars: AgingVariables }) {
         })}
       </div>
       <Explainer>
-        En cada paso todos los contadores se desplazan un bit a la derecha. Si la página fue
-        referenciada, el bit más significativo (izquierda) se pone a 1. Se reemplaza el frame
-        con el contador más bajo (el que no se ha usado recientemente).
+        Al acceder a una página su contador se reinicia a 1. Cada paso sin acceso suma 1.
+        Se reemplaza el frame con el contador más alto (el más envejecido).
       </Explainer>
     </div>
   );

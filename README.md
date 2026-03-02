@@ -162,16 +162,14 @@ Inverso a LFU. La hipótesis es que las páginas con alta frecuencia ya fueron s
 > Aproxima LRU mediante un **contador de 8 bits por frame** que se desplaza a la derecha en cada paso.
 
 En cada referencia a memoria:
-1. **Desplazamiento**: todos los contadores se desplazan un bit a la derecha (`counter >>= 1`), descartando el bit menos significativo. Las referencias antiguas "envejecen" hacia los bits bajos.
-2. **Activación del MSB**: si la página fue referenciada en este paso (hit o carga nueva), el bit más significativo del contador se activa (`counter |= 0x80`).
-3. **Reemplazo**: ante un fallo, se expulsa el frame con el **contador más bajo** (el que tiene el historial de acceso más antiguo y escaso).
+1. **Envejecimiento**: el contador de **todos** los frames ocupados se incrementa en 1.
+2. **Reset al acceder**: si la página referenciada ya estaba en memoria (hit) o se acaba de cargar, su contador se fija en **1** (recién usada).
+3. **Reemplazo**: ante un fallo sin frames libres, se expulsa el frame con el **contador más alto** (el que lleva más pasos sin ser accedido).
 
-El contador actúa como un historial comprimido de 8 pasos: los bits de mayor peso representan referencias recientes y los de menor peso referencias antiguas.
-
-- **Ventaja**: buena aproximación a LRU con hardware simple (solo un registro entero por frame).
-- **Desventaja**: resolución limitada a 8 pasos de historial; no distingue dos páginas con el mismo patrón de acceso dentro de esa ventana.
-- **Desempate**: si dos frames tienen igual contador, se expulsa el **menos recientemente usado** (LRU sobre `lastUsed`).
-- **Variables visibles**: contador de 8 bits en representación binaria y decimal por frame.
+- **Ventaja**: sencillo de entender e implementar; el valor del contador refleja directamente cuántos pasos lleva la página sin usarse.
+- **Desventaja**: similar a LRU pero sin la precisión exacta del timestamp; dos páginas no usadas el mismo número de pasos son indistinguibles salvo por desempate.
+- **Desempate**: si dos frames tienen igual contador, se expulsa el **menos recientemente usado** (menor `lastUsed`).
+- **Variables visibles**: contador decimal por frame (1 = recién usada, N = N pasos sin acceso).
 
 ---
 

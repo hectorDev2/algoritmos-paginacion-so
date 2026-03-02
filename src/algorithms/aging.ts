@@ -1,15 +1,12 @@
 import type { Snapshot, AgingVariables } from '../types';
 import { emptyFrame, cloneFrames } from './utils';
 
-// Aging: aproximación a LRU mediante contador de 8 bits por frame.
-// En cada paso:
-//   1. Desplazar todos los contadores un bit a la derecha (>>= 1).
-//   2. Si la página referenciada estaba en memoria (hit) → activar el MSB (|= 0x80).
-//   3. Si hubo fallo → reemplazar el frame con el contador más bajo; al cargar,
-//      su contador se inicializa con el MSB activo (0x80).
-// Desempate: menor contador → mayor LRU si empatan.
-
-const MSB = 0x80;  // 1000 0000
+// Aging (envejecimiento):
+//   - Al acceder a una página (hit o carga nueva) su contador se pone a 1.
+//   - En cada paso, todos los demás frames incrementan su contador en 1.
+//   - Al producirse un fallo se reemplaza el frame con el contador MÁS ALTO
+//     (el que lleva más pasos sin ser usado).
+// Desempate: mayor contador → menor lastUsed (LRU) si empatan.
 
 export function runAging(sequence: number[], frameCount: number): Snapshot[] {
   const snapshots: Snapshot[] = [];
@@ -23,19 +20,19 @@ export function runAging(sequence: number[], frameCount: number): Snapshot[] {
     let newFrames = cloneFrames(frames);
     timer++;
 
-    // Paso 1: desplazar todos los contadores a la derecha (envejecimiento)
+    // Envejecer todos los frames ocupados (+1 cada paso)
     newFrames = newFrames.map(f => ({
       ...f,
-      agingCounter: f.page !== null ? (f.agingCounter >>> 1) & 0xFF : 0,
+      agingCounter: f.page !== null ? f.agingCounter + 1 : 0,
     }));
 
     const hitIndex = newFrames.findIndex(f => f.page === page);
 
     if (hitIndex !== -1) {
-      // HIT: activar MSB del frame accedido
+      // HIT: se usó ahora → resetear a 1
       hits++;
       newFrames[hitIndex].isHit = true;
-      newFrames[hitIndex].agingCounter = (newFrames[hitIndex].agingCounter | MSB) & 0xFF;
+      newFrames[hitIndex].agingCounter = 1;
       newFrames[hitIndex].lastUsed = timer;
 
       snapshots.push({
@@ -53,21 +50,20 @@ export function runAging(sequence: number[], frameCount: number): Snapshot[] {
       if (emptySlot !== -1) {
         replaceIdx = emptySlot;
       } else {
-        // Reemplazar el frame con el contador más bajo.
+        // Reemplazar el frame con el contador más alto (más envejecido).
         // Desempate: el menos recientemente usado (lastUsed más bajo).
-        replaceIdx = newFrames.reduce((minIdx, f, i) => {
-          const minF = newFrames[minIdx];
-          if (f.agingCounter < minF.agingCounter) return i;
-          if (f.agingCounter === minF.agingCounter && f.lastUsed < minF.lastUsed) return i;
-          return minIdx;
+        replaceIdx = newFrames.reduce((maxIdx, f, i) => {
+          const maxF = newFrames[maxIdx];
+          if (f.agingCounter > maxF.agingCounter) return i;
+          if (f.agingCounter === maxF.agingCounter && f.lastUsed < maxF.lastUsed) return i;
+          return maxIdx;
         }, 0);
       }
 
       newFrames[replaceIdx].page = page;
       newFrames[replaceIdx].isNew = true;
       newFrames[replaceIdx].isReplaced = emptySlot === -1;
-      // La página recién cargada fue referenciada en este paso → MSB activo
-      newFrames[replaceIdx].agingCounter = MSB;
+      newFrames[replaceIdx].agingCounter = 1; // recién cargada = edad 1
       newFrames[replaceIdx].lastUsed = timer;
 
       snapshots.push({
