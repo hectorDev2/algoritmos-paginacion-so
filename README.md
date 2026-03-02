@@ -43,7 +43,7 @@ npm run preview
 ## Flujo básico
 
 1. **Configurar** — Ingresa la secuencia de páginas (ej. `1 2 3 4 1 2 5`) y el número de marcos.
-2. **Elegir algoritmo** — Selecciona uno de los 7 algoritmos disponibles.
+2. **Elegir algoritmo** — Selecciona uno de los 9 algoritmos en el desplegable.
 3. **Ejecutar** — Pulsa _Ejecutar simulación_. Los snapshots se pre-calculan al instante.
 4. **Navegar** — Usa los controles para avanzar, retroceder, ir al inicio/fin o reproducir automáticamente.
 5. **Analizar** — Observa la tabla de marcos, las variables internas del algoritmo, las estadísticas y el panel de métricas.
@@ -202,6 +202,7 @@ En cada referencia a memoria:
 - Cada celda muestra datos internos según el algoritmo activo: orden de llegada (FIFO), timestamp (LRU), bits R/M y clase (NRU), bit de reloj (Clock/2da Oport.), frecuencia (LFU/MFU), contador de edad (Aging).
 - En NRU: badge `M=0` / `M=1` clickeable por columna para forzar el bit de modificación.
 - En **Clock**: la etiqueta de la fila muestra `▶ reloj` junto al frame al que apunta el puntero en el paso actual, actualizándose al navegar.
+- **Diseño adaptativo (mobile-first)**: en pantallas pequeñas las etiquetas se abrevian a `M0`, `M1`…, las celdas se reducen y los datos secundarios (R/M, frecuencia, timestamps) se ocultan para mantener la tabla legible.
 
 ### Controles de navegación
 - **Anterior / Siguiente** — avanzar o retroceder un paso.
@@ -276,7 +277,7 @@ src/
 │       └── useSimulatorActions() # Hook: acciones memoizadas con useCallback
 │
 └── components/
-    ├── ConfigPanel.tsx    # Selector de algoritmo, secuencia, nº de frames, ejecutar/reiniciar
+    ├── ConfigPanel.tsx    # Desplegable de algoritmo, secuencia, nº de frames, ejecutar/reiniciar
     ├── FrameTable.tsx     # Tabla principal; badges M clickeables en NRU
     ├── StepControls.tsx   # Navegación, scrubber, selector de velocidad
     ├── VariablesPanel.tsx # Variables internas del algoritmo en el paso actual
