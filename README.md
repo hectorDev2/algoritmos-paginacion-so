@@ -115,17 +115,19 @@ Requiere conocer la secuencia completa de antemano, por lo que es **no implement
 
 ---
 
-### Clock — Segunda Oportunidad
+### Clock — Reloj (puntero circular)
 
-> Variante eficiente de FIFO que da a cada página **una segunda oportunidad** antes de reemplazarla.
+> Variante eficiente de FIFO que da a cada página **una segunda oportunidad** antes de reemplazarla usando un **puntero circular**.
 
-Mantiene un puntero circular (`clockPointer`) sobre los frames. Cada frame tiene un **bit de reloj** (`clockBit`):
+Mantiene un puntero `clockPointer` que recorre los frames en círculo. Cada frame tiene un **bit de reloj** (`clockBit`):
 - Si la página es accedida (hit), su bit se pone a `1`.
-- Al producirse un fallo, el puntero avanza:
-  - Si el bit del frame actual es `1` → se pone a `0` (segunda oportunidad) y el puntero avanza.
-  - Si el bit es `0` → esa página es reemplazada.
+- Al producirse un fallo, el puntero avanza desde donde quedó la vez anterior:
+  - Si el bit del frame apuntado es `1` → se pone a `0` (segunda oportunidad) y el puntero avanza.
+  - Si el bit es `0` → esa página es reemplazada; el puntero queda apuntando al siguiente frame.
 
-- **Ventaja**: más justo que FIFO puro; páginas usadas recentemente no son reemplazadas de inmediato.
+- **Ventaja**: $O(1)$ amortizado; el frame no se mueve de su posición, solo avanza el puntero.
+- **Diferencia con Segunda Oportunidad**: Clock nunca mueve páginas en memoria, solo avanza un índice.
+- **Visualización**: la tabla de marcos muestra `▶ reloj` junto al frame al que apunta el puntero en el paso actual.
 - **Variables visibles**: posición del puntero, bit de reloj de cada frame y pasos recorridos buscando víctima (`stepsToReplace`).
 - **Métrica extra**: `stepsToReplace` se acumula como interrupciones adicionales en el panel de métricas.
 
@@ -157,9 +159,27 @@ Inverso a LFU. La hipótesis es que las páginas con alta frecuencia ya fueron s
 
 ---
 
+### Segunda Oportunidad — FIFO con bit de referencia (cola real)
+
+> Extensión de FIFO que da una segunda oportunidad a las páginas con **bit de referencia activo**, reordenando la cola físicamente.
+
+Mantiene una **cola FIFO real** de frames. En cada fallo:
+1. Se inspecciona el **frente** de la cola.
+2. Si `R=1` → segunda oportunidad: `R=0` y el frame pasa al **final** de la cola.
+3. Si `R=0` → esa página es la víctima y se reemplaza.
+4. La página nueva se carga en el frame víctima y entra al final de la cola con `R=0`.
+
+En cada hit: `R=1` del frame accedido.
+
+- **Diferencia con Clock**: la cola se reordena físicamente al dar segunda oportunidad (Clock solo avanza un puntero sin mover páginas).
+- **Resultado práctico**: ambos algoritmos producen los mismos fallos en la mayoría de secuencias; la diferencia es estructural.
+- **Variables visibles**: cola completa en orden FIFO, `R` de cada entry, indicador `▶` del frente, badges **Víctima** / **2da oport.** y contador de páginas que recibieron segunda oportunidad.
+
+---
+
 ### Aging — Envejecimiento
 
-> Aproxima LRU mediante un **contador de 8 bits por frame** que se desplaza a la derecha en cada paso.
+> Cada frame lleva un **contador decimal** que mide cuántos pasos lleva sin ser accedido.
 
 En cada referencia a memoria:
 1. **Envejecimiento**: el contador de **todos** los frames ocupados se incrementa en 1.
@@ -179,8 +199,9 @@ En cada referencia a memoria:
 - Filas = frames físicos, columnas = pasos de la secuencia.
 - **Código de color** por celda: verde = carga nueva, azul = hit, rojo = reemplazo, gris = ocupada sin cambios.
 - Clic en cualquier columna para saltar directamente a ese paso.
-- Cada celda muestra datos internos según el algoritmo activo: orden de llegada (FIFO), timestamp (LRU), bits R/M y clase (NRU), bit de reloj (Clock), frecuencia (LFU/MFU).
+- Cada celda muestra datos internos según el algoritmo activo: orden de llegada (FIFO), timestamp (LRU), bits R/M y clase (NRU), bit de reloj (Clock/2da Oport.), frecuencia (LFU/MFU), contador de edad (Aging).
 - En NRU: badge `M=0` / `M=1` clickeable por columna para forzar el bit de modificación.
+- En **Clock**: la etiqueta de la fila muestra `▶ reloj` junto al frame al que apunta el puntero en el paso actual, actualizándose al navegar.
 
 ### Controles de navegación
 - **Anterior / Siguiente** — avanzar o retroceder un paso.
@@ -195,9 +216,10 @@ Muestra en tiempo real las estructuras internas del algoritmo en el paso actual:
 - **LRU**: timestamp de último uso por frame.
 - **NRU**: bits R/M, clase y tick count de resets.
 - **OPT**: próximo uso de cada página cargada.
-- **Clock**: puntero, bit de segunda oportunidad y pasos recorridos.
+- **Clock**: puntero circular, bit de reloj y pasos recorridos buscando víctima.
+- **Segunda Oportunidad**: cola FIFO completa con `R` de cada entry y badges Víctima/2da oport.
 - **LFU / MFU**: frecuencia de acceso por frame.
-- **Aging**: contador de 8 bits en binario y decimal por frame.
+- **Aging**: contador decimal por frame (1 = recién usada, N = N pasos sin acceso).
 
 ### Panel de estadísticas
 - Fallos y hits totales con porcentaje.
@@ -240,6 +262,7 @@ src/
 │   ├── lfu.ts     → runLFU(sequence, frameCount)
 │   ├── mfu.ts     → runMFU(sequence, frameCount)
 │   ├── aging.ts   → runAging(sequence, frameCount)
+│   ├── segunda.ts → runSegunda(sequence, frameCount)
 │   ├── utils.ts   → emptyFrame(), cloneFrames()
 │   └── index.ts   → re-exporta todas las funciones
 │
