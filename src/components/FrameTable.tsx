@@ -131,14 +131,15 @@ export function FrameTable() {
 
       {/* ── Tabla scrolleable ── */}
       <div ref={scrollRef} className="overflow-x-auto">
-        <div className="px-5 pt-4 pb-2">
+        <div className="px-3 sm:px-5 pt-4 pb-2">
           <table className="border-separate border-spacing-0">
             <thead>
               <tr>
                 {/* Etiqueta fija izquierda */}
-                <th className="sticky left-0 z-20 bg-slate-900 w-24 min-w-24 pr-4 pb-3 text-left align-bottom">
+                <th className="sticky left-0 z-20 bg-slate-900 w-14 min-w-14 sm:w-24 sm:min-w-24 pr-2 sm:pr-4 pb-3 text-left align-bottom">
                   <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
-                    Tiempo →
+                    <span className="sm:hidden">T→</span>
+                    <span className="hidden sm:inline">Tiempo →</span>
                   </span>
                 </th>
 
@@ -160,7 +161,7 @@ export function FrameTable() {
                       ref={isCurrent ? activeColRef : undefined}
                       onClick={() => goToStep(col)}
                       className={`pb-3 align-bottom text-center cursor-pointer select-none group
-                        ${algorithm === 'NRU' ? 'w-20 min-w-20' : algorithm === 'AGING' ? 'w-16 min-w-16' : 'w-12 min-w-12'}`}
+                        ${algorithm === 'NRU' ? 'w-16 min-w-16 sm:w-20 sm:min-w-20' : algorithm === 'AGING' ? 'w-11 min-w-11 sm:w-16 sm:min-w-16' : 'w-9 min-w-9 sm:w-12 sm:min-w-12'}`}
                     >
                       {/* Número del paso */}
                       <div className={`text-[10px] font-semibold mb-1.5 transition-colors
@@ -169,7 +170,7 @@ export function FrameTable() {
                       </div>
                       {/* Celda de la página de referencia */}
                       <div className={`
-                        mx-auto w-10 h-10 rounded-xl flex items-center justify-center
+                        mx-auto w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center
                         font-black text-sm border-2 transition-all duration-150
                         ${isCurrent
                           ? `${accentBg} border-transparent text-white shadow-md`
@@ -217,10 +218,10 @@ export function FrameTable() {
               {Array.from({ length: frameCount }, (_, frameIdx) => (
                 <tr key={frameIdx}>
                   {/* Etiqueta del frame */}
-                  <td className="sticky left-0 z-20 bg-slate-900 pr-4 py-1 align-middle">
-                    <div className="flex items-center gap-2">
+                  <td className="sticky left-0 z-20 bg-slate-900 pr-2 sm:pr-4 py-1 align-middle">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx ? (
-                        <div className="flex items-center justify-center w-5 h-6 shrink-0">
+                        <div className="flex items-center justify-center w-4 sm:w-5 h-6 shrink-0">
                           <span className="text-orange-400 text-sm leading-none">▶</span>
                         </div>
                       ) : (
@@ -230,10 +231,11 @@ export function FrameTable() {
                         ${algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx
                           ? 'text-orange-300'
                           : 'text-slate-500'}`}>
-                        Marco {frameIdx}
+                        <span className="sm:hidden">M{frameIdx}</span>
+                        <span className="hidden sm:inline">Marco {frameIdx}</span>
                       </span>
                       {algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx && (
-                        <span className="text-[9px] font-bold text-orange-400/70 bg-orange-500/10
+                        <span className="hidden sm:inline text-[9px] font-bold text-orange-400/70 bg-orange-500/10
                                          border border-orange-500/30 rounded px-1 py-px">
                           reloj
                         </span>
@@ -285,18 +287,18 @@ export function FrameTable() {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.18, ease: 'easeOut' }}
                             className={`
-                              w-14 mx-auto rounded-xl border flex flex-col
-                              items-center justify-center py-1.5 gap-0.5
+                              w-9 sm:w-14 mx-auto rounded-xl border flex flex-col
+                              items-center justify-center py-1 sm:py-1.5 gap-0.5
                               transition-colors duration-300
                               ${cellBg}
                               ${isCurrent ? 'ring-1 ring-white/10' : ''}
                             `}
                           >
-                            <span className={`font-black text-sm leading-none ${valueColor}`}>
+                            <span className={`font-black text-xs sm:text-sm leading-none ${valueColor}`}>
                               {isEmpty ? '–' : frame.page}
                             </span>
                             {!isEmpty && (
-                              <span className={`text-[10px] font-mono font-bold ${accentSub}`}>
+                              <span className={`text-[9px] font-mono font-bold ${accentSub}`}>
                                 {frame.agingCounter}
                               </span>
                             )}
@@ -329,20 +331,20 @@ export function FrameTable() {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 0.18, ease: 'easeOut' }}
                             className={`
-                              w-14 mx-auto rounded-xl border flex flex-col
-                              items-center justify-center py-1.5 gap-1
+                              w-11 sm:w-14 mx-auto rounded-xl border flex flex-col
+                              items-center justify-center py-1 sm:py-1.5 gap-0.5 sm:gap-1
                               transition-colors duration-300
                               ${cellBg}
                               ${isCurrent ? 'ring-1 ring-white/10' : ''}
                             `}
                           >
                             {/* Número de página */}
-                            <span className={`font-black text-sm leading-none ${valueColor}`}>
+                            <span className={`font-black text-xs sm:text-sm leading-none ${valueColor}`}>
                               {isEmpty ? '–' : frame.page}
                             </span>
                             {/* Badges R y M */}
                             {!isEmpty && (
-                              <div className="flex gap-0.5">
+                              <div className="hidden sm:flex gap-0.5">
                                 <motion.span
                                   key={`R-${frameIdx}-${col}-${frame.bitR?1:0}`}
                                   animate={{ opacity: 1 }}
@@ -397,17 +399,17 @@ export function FrameTable() {
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.18, ease: 'easeOut' }}
                           className={`
-                            w-10 h-10 mx-auto rounded-xl border flex flex-col
+                            w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-xl border flex flex-col
                             items-center justify-center gap-px
                             transition-colors duration-150
                             ${cellBg}
                             ${isCurrent ? 'ring-1 ring-white/10' : ''}
                           `}
                         >
-                          <span className={`font-black text-sm leading-none ${valueColor}`}>
+                          <span className={`font-black text-xs sm:text-sm leading-none ${valueColor}`}>
                             {isEmpty ? '–' : frame.page}
                           </span>
-                          {subInfo}
+                          <span className="hidden sm:contents">{subInfo}</span>
                         </motion.div>
                       </td>
                     );
@@ -424,9 +426,10 @@ export function FrameTable() {
 
               {/* ── Fila de fallos ── */}
               <tr>
-                <td className="sticky left-0 z-20 bg-slate-900 pr-4 py-2">
+                <td className="sticky left-0 z-20 bg-slate-900 pr-2 sm:pr-4 py-2">
                   <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">
-                    Fallo de pág.
+                    <span className="sm:hidden">Fallos</span>
+                    <span className="hidden sm:inline">Fallo de pág.</span>
                   </span>
                 </td>
                 {snapshots.map((snap, col) => {
@@ -439,10 +442,10 @@ export function FrameTable() {
                     >
                       {snap.isFault
                         ? <span className={`
-                            block mx-auto w-4 h-4 rounded-full bg-red-500
+                            block mx-auto w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-red-500
                             ${isCurrent ? 'ring-2 ring-red-400/50 ring-offset-1 ring-offset-slate-900' : ''}
                           `} />
-                        : <span className="block mx-auto w-4 h-4" />
+                        : <span className="block mx-auto w-3 h-3 sm:w-4 sm:h-4" />
                       }
                     </td>
                   );

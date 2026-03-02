@@ -47,10 +47,12 @@ function AppContent() {
       <main className="flex-1 max-w-screen-2xl mx-auto w-full px-4 sm:px-6 py-6
                        grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-5 items-start">
 
-        {/* Sidebar izquierdo */}
+        {/* Sidebar izquierdo — en mobile solo muestra ConfigPanel; StatsPanel va abajo */}
         <aside className="flex flex-col gap-5">
           <ConfigPanel />
-          <StatsPanel />
+          <div className="hidden xl:block">
+            <StatsPanel />
+          </div>
         </aside>
 
         {/* Área principal */}
@@ -59,6 +61,10 @@ function AppContent() {
           <StepControls />
           <VariablesPanel />
           <MetricsPanel />
+          {/* StatsPanel al final en mobile */}
+          <div className="xl:hidden">
+            <StatsPanel />
+          </div>
         </section>
       </main>
 
