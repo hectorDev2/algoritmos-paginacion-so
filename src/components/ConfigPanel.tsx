@@ -64,7 +64,9 @@ export function ConfigPanel() {
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">
             Algoritmo
           </p>
-          <div className="relative">
+
+          {/* Mobile: select desplegable */}
+          <div className="relative sm:hidden">
             <select
               value={state.algorithm}
               onChange={e => setAlgorithm(e.target.value as AlgorithmId)}
@@ -78,15 +80,45 @@ export function ConfigPanel() {
                 </option>
               ))}
             </select>
-            {/* Chevron icon */}
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
               ▾
             </span>
+            <div className="mt-2 flex items-center gap-2 px-1">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${selectedAlgo.dot}`} />
+              <span className="text-[11px] text-slate-500">{selectedAlgo.description}</span>
+            </div>
           </div>
-          {/* Selected algorithm badge */}
-          <div className="mt-2 flex items-center gap-2 px-1">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${selectedAlgo.dot}`} />
-            <span className="text-[11px] text-slate-500">{selectedAlgo.description}</span>
+
+          {/* Desktop: grid de botones */}
+          <div className="hidden sm:grid grid-cols-3 gap-2">
+            {ALGORITHMS.map(alg => {
+              const isActive = state.algorithm === alg.id;
+              return (
+                <button
+                  key={alg.id}
+                  onClick={() => setAlgorithm(alg.id)}
+                  className={`
+                    group relative rounded-xl p-3 text-left border transition-all duration-150 cursor-pointer
+                    ${isActive
+                      ? 'border-indigo-500 bg-indigo-600/10 shadow-sm shadow-indigo-500/10'
+                      : 'border-slate-700/60 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-800'}
+                  `}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${alg.dot}`} />
+                    <span className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-300'}`}>
+                      {alg.label}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-tight pl-3.5">
+                    {alg.description}
+                  </p>
+                  {isActive && (
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
