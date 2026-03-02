@@ -219,10 +219,25 @@ export function FrameTable() {
                   {/* Etiqueta del frame */}
                   <td className="sticky left-0 z-20 bg-slate-900 pr-4 py-1 align-middle">
                     <div className="flex items-center gap-2">
-                      <div className={`w-1 h-6 rounded-full ${accentBg} opacity-50`} />
-                      <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+                      {algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx ? (
+                        <div className="flex items-center justify-center w-5 h-6 shrink-0">
+                          <span className="text-orange-400 text-sm leading-none">▶</span>
+                        </div>
+                      ) : (
+                        <div className={`w-1 h-6 rounded-full ${accentBg} opacity-50 shrink-0`} />
+                      )}
+                      <span className={`text-xs font-semibold whitespace-nowrap
+                        ${algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx
+                          ? 'text-orange-300'
+                          : 'text-slate-500'}`}>
                         Marco {frameIdx}
                       </span>
+                      {algorithm === 'CLOCK' && currentSnap.clockPointer === frameIdx && (
+                        <span className="text-[9px] font-bold text-orange-400/70 bg-orange-500/10
+                                         border border-orange-500/30 rounded px-1 py-px">
+                          reloj
+                        </span>
+                      )}
                     </div>
                   </td>
 
