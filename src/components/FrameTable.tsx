@@ -10,6 +10,7 @@ const ALGO_ACCENT_BG: Record<string, string> = {
   CLOCK: 'bg-orange-500',
   LFU:   'bg-pink-500',
   MFU:   'bg-teal-500',
+  AGING: 'bg-rose-500',
 };
 const ALGO_BORDER: Record<string, string> = {
   FIFO:  'border-blue-500',
@@ -19,6 +20,7 @@ const ALGO_BORDER: Record<string, string> = {
   CLOCK: 'border-orange-500',
   LFU:   'border-pink-500',
   MFU:   'border-teal-500',
+  AGING: 'border-rose-500',
 };
 const ALGO_TEXT: Record<string, string> = {
   FIFO:  'text-blue-400',
@@ -28,6 +30,7 @@ const ALGO_TEXT: Record<string, string> = {
   CLOCK: 'text-orange-400',
   LFU:   'text-pink-400',
   MFU:   'text-teal-400',
+  AGING: 'text-rose-400',
 };
 const ALGO_SUBTEXT: Record<string, string> = {
   FIFO:  'text-blue-400/70',
@@ -37,6 +40,7 @@ const ALGO_SUBTEXT: Record<string, string> = {
   CLOCK: 'text-orange-400/70',
   LFU:   'text-pink-400/70',
   MFU:   'text-teal-400/70',
+  AGING: 'text-rose-400/70',
 };
 
 export function FrameTable() {
@@ -152,7 +156,7 @@ export function FrameTable() {
                       ref={isCurrent ? activeColRef : undefined}
                       onClick={() => goToStep(col)}
                       className={`pb-3 align-bottom text-center cursor-pointer select-none group
-                        ${algorithm === 'NRU' ? 'w-16 min-w-16' : 'w-12 min-w-12'}`}
+                        ${algorithm === 'NRU' || algorithm === 'AGING' ? 'w-20 min-w-20' : 'w-12 min-w-12'}`}
                     >
                       {/* Número del paso */}
                       <div className={`text-[10px] font-semibold mb-1.5 transition-colors
@@ -234,9 +238,9 @@ export function FrameTable() {
                       else                  { cellBg = 'bg-slate-800 border-slate-700/60';   valueColor = 'text-slate-200'; }
                     }
 
-                    // Sub-info por algoritmo (non-NRU)
+                    // Sub-info por algoritmo (non-NRU, non-AGING)
                     let subInfo: React.ReactNode = null;
-                    if (!isEmpty && algorithm !== 'NRU') {
+                    if (!isEmpty && algorithm !== 'NRU' && algorithm !== 'AGING') {
                       if (algorithm === 'CLOCK')
                         subInfo = <span className={`text-[9px] font-mono ${frame.clockBit ? accentSub : 'text-slate-600'}`}>{frame.clockBit ? '●' : '○'}</span>;
                       else if (algorithm === 'LFU' || algorithm === 'MFU')
@@ -245,6 +249,61 @@ export function FrameTable() {
                         subInfo = <span className={`text-[9px] font-mono ${accentSub}`}>t{frame.lastUsed}</span>;
                       else if (algorithm === 'FIFO')
                         subInfo = <span className={`text-[9px] font-mono ${accentSub}`}>#{frame.arrivalOrder}</span>;
+                    }
+
+                    // ── Celda AGING: 8 bits del contador ──
+                    if (algorithm === 'AGING') {
+                      const bits = frame.agingCounter.toString(2).padStart(8, '0').split('');
+                      return (
+                        <td
+                          key={col}
+                          onClick={() => goToStep(col)}
+                          className={`py-1 px-0.5 cursor-pointer transition-colors duration-100
+                            ${isCurrent ? 'bg-white/[0.03]' : 'hover:bg-white/[0.02]'}`}
+                        >
+                          <motion.div
+                            key={`${frameIdx}-${col}-${frame.page}-${frame.agingCounter}`}
+                            initial={frame.isNew || frame.isReplaced ? { scale: 0.65, opacity: 0 } : false}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.18, ease: 'easeOut' }}
+                            className={`
+                              w-18 mx-auto rounded-xl border flex flex-col
+                              items-center justify-center py-1.5 gap-1
+                              transition-colors duration-300
+                              ${cellBg}
+                              ${isCurrent ? 'ring-1 ring-white/10' : ''}
+                            `}
+                          >
+                            {/* Número de página */}
+                            <span className={`font-black text-sm leading-none ${valueColor}`}>
+                              {isEmpty ? '–' : frame.page}
+                            </span>
+                            {/* 8 bits del contador */}
+                            {!isEmpty && (
+                              <div className="flex gap-px">
+                                {bits.map((bit, bi) => (
+                                  <span
+                                    key={bi}
+                                    className={`w-[7px] h-[9px] rounded-[2px] flex items-center justify-center
+                                      text-[7px] font-mono font-bold leading-none
+                                      ${bit === '1'
+                                        ? 'bg-rose-500/30 text-rose-300'
+                                        : 'bg-slate-700/60 text-slate-600'}`}
+                                  >
+                                    {bit}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {/* Valor decimal */}
+                            {!isEmpty && (
+                              <span className="text-[8px] font-mono text-rose-400/60 leading-none">
+                                {frame.agingCounter}
+                              </span>
+                            )}
+                          </motion.div>
+                        </td>
+                      );
                     }
 
                     // ── Celda NRU: diseño expandido con badges R y M ──
