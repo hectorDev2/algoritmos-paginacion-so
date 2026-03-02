@@ -1,6 +1,6 @@
 // ─── Tipos base ───────────────────────────────────────────────────────────────
 
-export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU' | 'MFU' | 'AGING';
+export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU' | 'MFU' | 'AGING' | 'SEGUNDA';
 
 export interface FrameState {
   frameIndex: number;       // índice del frame (0..n-1)
@@ -45,7 +45,8 @@ export type AlgorithmVariables =
   | CLOCKVariables
   | LFUVariables
   | MFUVariables
-  | AgingVariables;
+  | AgingVariables
+  | SegundaVariables;
 
 export interface FIFOVariables {
   type: 'FIFO';
@@ -89,7 +90,14 @@ export interface MFUVariables {
 
 export interface AgingVariables {
   type: 'AGING';
-  counters: { page: number | null; counter: number }[]; // counter: 8 bits
+  counters: { page: number | null; counter: number }[];
+}
+
+export interface SegundaVariables {
+  type: 'SEGUNDA';
+  // Cola FIFO en orden (índice 0 = frente, próximo candidato)
+  queue: { frameIdx: number; page: number | null; refBit: boolean }[];
+  stepsChecked: number; // páginas que recibieron segunda oportunidad en este paso
 }
 
 // ─── Métricas de simulación ───────────────────────────────────────────────────

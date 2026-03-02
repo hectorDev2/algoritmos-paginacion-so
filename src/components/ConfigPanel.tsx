@@ -10,7 +10,8 @@ const ALGORITHMS: { id: AlgorithmId; label: string; description: string; dot: st
   { id: 'CLOCK', label: 'Clock', description: 'Segunda Oportunidad',     dot: 'bg-orange-400' },
   { id: 'LFU',   label: 'LFU',   description: 'Least Frequently Used',   dot: 'bg-pink-400' },
   { id: 'MFU',   label: 'MFU',   description: 'Most Frequently Used',    dot: 'bg-teal-400' },
-  { id: 'AGING', label: 'Aging', description: 'Envejecimiento (8 bits)', dot: 'bg-rose-400' },
+  { id: 'AGING',   label: 'Aging',    description: 'Envejecimiento',          dot: 'bg-rose-400' },
+  { id: 'SEGUNDA', label: '2da Oport', description: 'Segunda Oportunidad FIFO', dot: 'bg-cyan-400' },
 ];
 
 export function ConfigPanel() {

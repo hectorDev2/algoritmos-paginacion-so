@@ -1,7 +1,7 @@
 import { useSimulator } from '../store/simulatorStore';
 import type {
   AlgorithmVariables, FIFOVariables, LRUVariables,
-  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables, MFUVariables, AgingVariables,
+  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables, MFUVariables, AgingVariables, SegundaVariables,
 } from '../types';
 
 export function VariablesPanel() {
@@ -43,7 +43,8 @@ function VariablesContent({ vars }: { vars: AlgorithmVariables }) {
     case 'CLOCK': return <CLOCKVars vars={vars} />;
     case 'LFU':   return <LFUVars   vars={vars} />;
     case 'MFU':   return <MFUVars   vars={vars} />;
-    case 'AGING': return <AgingVars vars={vars} />;
+    case 'AGING':   return <AgingVars   vars={vars} />;
+    case 'SEGUNDA': return <SegundaVars vars={vars} />;
   }
 }
 
@@ -311,6 +312,65 @@ function MFUVars({ vars }: { vars: MFUVariables }) {
   );
 }
 
+function SegundaVars({ vars }: { vars: SegundaVariables }) {
+  return (
+    <div className="space-y-4">
+      {vars.stepsChecked > 0 && (
+        <KV
+          label="Páginas con segunda oportunidad"
+          value={`${vars.stepsChecked} página${vars.stepsChecked > 1 ? 's' : ''}`}
+          color="cyan"
+        />
+      )}
+
+      <div>
+        <SectionLabel>Cola FIFO (frente = próximo candidato)</SectionLabel>
+        <div className="mt-2 space-y-1.5">
+          {vars.queue.length === 0
+            ? <EmptyMsg>Cola vacía</EmptyMsg>
+            : vars.queue.map((entry, i) => (
+              <div key={i} className="flex items-center gap-2">
+                {/* Posición en la cola */}
+                <span className="text-[10px] text-slate-600 w-5 shrink-0 text-right">{i + 1}.</span>
+                {/* Flecha para el frente */}
+                {i === 0
+                  ? <span className="text-cyan-400 text-xs shrink-0">▶</span>
+                  : <span className="w-3 shrink-0" />
+                }
+                {/* Frame y página */}
+                <span className="text-[11px] text-slate-500 w-16 shrink-0">
+                  Frame {entry.frameIdx}
+                </span>
+                <span className="text-xs font-bold font-mono text-cyan-300 w-12 shrink-0">
+                  {entry.page !== null ? `Pág. ${entry.page}` : '—'}
+                </span>
+                {/* Bit de referencia */}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold
+                  ${entry.refBit
+                    ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300'
+                    : 'bg-slate-800 border-slate-700 text-slate-600'}`}>
+                  R={entry.refBit ? 1 : 0}
+                </span>
+                {i === 0 && !entry.refBit && (
+                  <Badge color="red">Víctima</Badge>
+                )}
+                {i === 0 && entry.refBit && (
+                  <Badge color="blue">2da oport.</Badge>
+                )}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <Explainer>
+        El frente de la cola es el próximo candidato. Si R=1 se le da segunda oportunidad
+        (R→0 y pasa al final). Si R=0 se reemplaza. En hit: R=1 del frame accedido.
+      </Explainer>
+    </div>
+  );
+}
+
 function AgingVars({ vars }: { vars: AgingVariables }) {
   const occupied = vars.counters.filter(f => f.page !== null);
   const minCounter = occupied.length > 0 ? Math.min(...occupied.map(f => f.counter)) : -1;
@@ -388,6 +448,8 @@ function KV({ label, value, color }: { label: string; value: string; color: stri
     orange: 'text-orange-300 bg-orange-500/10 border-orange-500/30',
     red:    'text-red-300 bg-red-500/10 border-red-500/30',
     pink:   'text-pink-300 bg-pink-500/10 border-pink-500/30',
+    cyan:   'text-cyan-300 bg-cyan-500/10 border-cyan-500/30',
+    rose:   'text-rose-300 bg-rose-500/10 border-rose-500/30',
   };
   return (
     <div className="flex items-center justify-between gap-4 py-2 px-3

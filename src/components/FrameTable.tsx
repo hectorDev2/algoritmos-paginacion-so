@@ -10,7 +10,8 @@ const ALGO_ACCENT_BG: Record<string, string> = {
   CLOCK: 'bg-orange-500',
   LFU:   'bg-pink-500',
   MFU:   'bg-teal-500',
-  AGING: 'bg-rose-500',
+  AGING:   'bg-rose-500',
+  SEGUNDA: 'bg-cyan-500',
 };
 const ALGO_BORDER: Record<string, string> = {
   FIFO:  'border-blue-500',
@@ -20,7 +21,8 @@ const ALGO_BORDER: Record<string, string> = {
   CLOCK: 'border-orange-500',
   LFU:   'border-pink-500',
   MFU:   'border-teal-500',
-  AGING: 'border-rose-500',
+  AGING:   'border-rose-500',
+  SEGUNDA: 'border-cyan-500',
 };
 const ALGO_TEXT: Record<string, string> = {
   FIFO:  'text-blue-400',
@@ -30,7 +32,8 @@ const ALGO_TEXT: Record<string, string> = {
   CLOCK: 'text-orange-400',
   LFU:   'text-pink-400',
   MFU:   'text-teal-400',
-  AGING: 'text-rose-400',
+  AGING:   'text-rose-400',
+  SEGUNDA: 'text-cyan-400',
 };
 const ALGO_SUBTEXT: Record<string, string> = {
   FIFO:  'text-blue-400/70',
@@ -40,7 +43,8 @@ const ALGO_SUBTEXT: Record<string, string> = {
   CLOCK: 'text-orange-400/70',
   LFU:   'text-pink-400/70',
   MFU:   'text-teal-400/70',
-  AGING: 'text-rose-400/70',
+  AGING:   'text-rose-400/70',
+  SEGUNDA: 'text-cyan-400/70',
 };
 
 export function FrameTable() {
@@ -241,7 +245,7 @@ export function FrameTable() {
                     // Sub-info por algoritmo (non-NRU, non-AGING)
                     let subInfo: React.ReactNode = null;
                     if (!isEmpty && algorithm !== 'NRU' && algorithm !== 'AGING') {
-                      if (algorithm === 'CLOCK')
+                      if (algorithm === 'CLOCK' || algorithm === 'SEGUNDA')
                         subInfo = <span className={`text-[9px] font-mono ${frame.clockBit ? accentSub : 'text-slate-600'}`}>{frame.clockBit ? '●' : '○'}</span>;
                       else if (algorithm === 'LFU' || algorithm === 'MFU')
                         subInfo = <span className={`text-[9px] font-mono ${accentSub}`}>f{frame.frequency}</span>;
