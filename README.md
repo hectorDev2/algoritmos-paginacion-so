@@ -157,6 +157,24 @@ Inverso a LFU. La hipótesis es que las páginas con alta frecuencia ya fueron s
 
 ---
 
+### Aging — Envejecimiento
+
+> Aproxima LRU mediante un **contador de 8 bits por frame** que se desplaza a la derecha en cada paso.
+
+En cada referencia a memoria:
+1. **Desplazamiento**: todos los contadores se desplazan un bit a la derecha (`counter >>= 1`), descartando el bit menos significativo. Las referencias antiguas "envejecen" hacia los bits bajos.
+2. **Activación del MSB**: si la página fue referenciada en este paso (hit o carga nueva), el bit más significativo del contador se activa (`counter |= 0x80`).
+3. **Reemplazo**: ante un fallo, se expulsa el frame con el **contador más bajo** (el que tiene el historial de acceso más antiguo y escaso).
+
+El contador actúa como un historial comprimido de 8 pasos: los bits de mayor peso representan referencias recientes y los de menor peso referencias antiguas.
+
+- **Ventaja**: buena aproximación a LRU con hardware simple (solo un registro entero por frame).
+- **Desventaja**: resolución limitada a 8 pasos de historial; no distingue dos páginas con el mismo patrón de acceso dentro de esa ventana.
+- **Desempate**: si dos frames tienen igual contador, se expulsa el **menos recientemente usado** (LRU sobre `lastUsed`).
+- **Variables visibles**: contador de 8 bits en representación binaria y decimal por frame.
+
+---
+
 ## Funcionalidades del simulador
 
 ### Tabla de marcos
@@ -181,6 +199,7 @@ Muestra en tiempo real las estructuras internas del algoritmo en el paso actual:
 - **OPT**: próximo uso de cada página cargada.
 - **Clock**: puntero, bit de segunda oportunidad y pasos recorridos.
 - **LFU / MFU**: frecuencia de acceso por frame.
+- **Aging**: contador de 8 bits en binario y decimal por frame.
 
 ### Panel de estadísticas
 - Fallos y hits totales con porcentaje.
@@ -222,6 +241,7 @@ src/
 │   ├── clock.ts   → runClock(sequence, frameCount)
 │   ├── lfu.ts     → runLFU(sequence, frameCount)
 │   ├── mfu.ts     → runMFU(sequence, frameCount)
+│   ├── aging.ts   → runAging(sequence, frameCount)
 │   ├── utils.ts   → emptyFrame(), cloneFrames()
 │   └── index.ts   → re-exporta todas las funciones
 │

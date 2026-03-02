@@ -13,6 +13,7 @@ export function emptyFrame(frameIndex: number): FrameState {
     lastUsed: 0,
     frequency: 0,
     arrivalOrder: 0,
+    agingCounter: 0,
   };
 }
 

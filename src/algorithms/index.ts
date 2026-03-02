@@ -5,3 +5,4 @@ export { runOPT } from './opt';
 export { runClock } from './clock';
 export { runLFU } from './lfu';
 export { runMFU } from './mfu';
+export { runAging } from './aging';

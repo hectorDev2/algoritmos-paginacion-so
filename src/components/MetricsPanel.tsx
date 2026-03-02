@@ -30,6 +30,7 @@ function extraInterruptLabel(algorithm: AlgorithmId): string {
   switch (algorithm) {
     case 'CLOCK': return 'Pasos buscando víctima (clock hand)';
     case 'NRU':   return 'Resets de bit R (ticks de reloj NRU)';
+    case 'AGING': return 'Interrupciones extra del algoritmo';
     default:      return 'Interrupciones extra del algoritmo';
   }
 }

@@ -1,7 +1,7 @@
 import { useSimulator } from '../store/simulatorStore';
 import type {
   AlgorithmVariables, FIFOVariables, LRUVariables,
-  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables, MFUVariables,
+  NRUVariables, OPTVariables, CLOCKVariables, LFUVariables, MFUVariables, AgingVariables,
 } from '../types';
 
 export function VariablesPanel() {
@@ -43,6 +43,7 @@ function VariablesContent({ vars }: { vars: AlgorithmVariables }) {
     case 'CLOCK': return <CLOCKVars vars={vars} />;
     case 'LFU':   return <LFUVars   vars={vars} />;
     case 'MFU':   return <MFUVars   vars={vars} />;
+    case 'AGING': return <AgingVars vars={vars} />;
   }
 }
 
@@ -305,6 +306,65 @@ function MFUVars({ vars }: { vars: MFUVariables }) {
       </div>
       <Explainer>
         MFU reemplaza el frame con mayor frecuencia de acceso (más frecuentemente usado). En caso de empate se usa LRU como desempate.
+      </Explainer>
+    </div>
+  );
+}
+
+function AgingVars({ vars }: { vars: AgingVariables }) {
+  const occupied = vars.counters.filter(f => f.page !== null);
+  const minCounter = occupied.length > 0 ? Math.min(...occupied.map(f => f.counter)) : -1;
+
+  // Convierte número a string binario de 8 dígitos
+  function toBin(n: number) {
+    return n.toString(2).padStart(8, '0');
+  }
+
+  return (
+    <div className="space-y-4">
+      <SectionLabel>Contador de envejecimiento por frame (8 bits)</SectionLabel>
+      <div className="space-y-2">
+        {vars.counters.map((f, i) => {
+          const isVictim = f.page !== null && f.counter === minCounter;
+          const bin = toBin(f.counter);
+          return (
+            <div key={i} className="flex items-center gap-2.5">
+              <span className="text-[11px] text-slate-500 w-16 shrink-0">Frame {i}</span>
+              <span className="text-xs font-bold font-mono text-rose-300 w-14 shrink-0">
+                {f.page !== null ? `Pág. ${f.page}` : '—'}
+              </span>
+              {f.page !== null ? (
+                <>
+                  {/* Visualización bit a bit: MSB más reciente */}
+                  <div className="flex gap-0.5">
+                    {bin.split('').map((bit, bi) => (
+                      <span
+                        key={bi}
+                        className={`w-5 h-6 rounded text-[10px] font-mono font-bold flex items-center justify-center
+                          ${bit === '1'
+                            ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+                            : 'bg-slate-800 border border-slate-700/40 text-slate-600'}`}
+                      >
+                        {bit}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500 shrink-0">
+                    ({f.counter})
+                  </span>
+                  {isVictim && <Badge color="red">Víctima</Badge>}
+                </>
+              ) : (
+                <span className="text-slate-700 text-xs font-mono">vacío</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <Explainer>
+        En cada paso todos los contadores se desplazan un bit a la derecha. Si la página fue
+        referenciada, el bit más significativo (izquierda) se pone a 1. Se reemplaza el frame
+        con el contador más bajo (el que no se ha usado recientemente).
       </Explainer>
     </div>
   );

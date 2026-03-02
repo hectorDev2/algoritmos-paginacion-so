@@ -1,6 +1,6 @@
 // ─── Tipos base ───────────────────────────────────────────────────────────────
 
-export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU' | 'MFU';
+export type AlgorithmId = 'FIFO' | 'LRU' | 'NRU' | 'OPT' | 'CLOCK' | 'LFU' | 'MFU' | 'AGING';
 
 export interface FrameState {
   frameIndex: number;       // índice del frame (0..n-1)
@@ -19,6 +19,8 @@ export interface FrameState {
   frequency: number;        // contador de frecuencia
   // FIFO
   arrivalOrder: number;     // orden de llegada
+  // Aging
+  agingCounter: number;     // contador de envejecimiento (8 bits)
 }
 
 export interface Snapshot {
@@ -42,7 +44,8 @@ export type AlgorithmVariables =
   | OPTVariables
   | CLOCKVariables
   | LFUVariables
-  | MFUVariables;
+  | MFUVariables
+  | AgingVariables;
 
 export interface FIFOVariables {
   type: 'FIFO';
@@ -82,6 +85,11 @@ export interface LFUVariables {
 export interface MFUVariables {
   type: 'MFU';
   frequencies: { page: number | null; freq: number }[];
+}
+
+export interface AgingVariables {
+  type: 'AGING';
+  counters: { page: number | null; counter: number }[]; // counter: 8 bits
 }
 
 // ─── Métricas de simulación ───────────────────────────────────────────────────
